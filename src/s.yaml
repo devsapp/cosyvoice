@@ -1,0 +1,43 @@
+edition: 3.0.0
+name: cosyvoice
+vars:
+  region: '{{ region }}'
+  functionName: '{{ functionName }}'
+template:
+  cosyvoice-template:
+    internetAccess: true
+    vpcConfig: auto
+resources:
+  cosyvoice-service:
+    component: fc3
+    props:
+      functionName: ${vars.functionName}
+      region: ${vars.region}
+      handler: index.handler
+      description: cosyvoice 服务端
+      timeout: 7200
+      diskSize: 512
+      instanceType: fc.gpu.tesla.1
+      runtime: custom-container
+      gpuConfig:
+        gpuMemorySize: 16384
+        gpuType: fc.gpu.tesla.1
+      customContainerConfig:
+        image: 'registry.${vars.region}.aliyuncs.com/serverlessdevshanxie/cosyvoice:v9'
+        webServerMode: true
+        port: 50000
+      cpu: 8
+      instanceConcurrency: 100
+      memorySize: 32768
+    extend:
+      name: cosyvoice-template
+  cosyvoice-service-domain:
+    component: fc3-domain
+    props:
+      region: ${vars.region}
+      domainName: auto
+      protocol: HTTP
+      routeConfig:
+        routes:
+          - path: /*
+            functionName: ${vars.functionName}
